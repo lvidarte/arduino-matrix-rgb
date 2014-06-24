@@ -15,10 +15,7 @@ class Led:
         self.b = b
 
     def get_msg(self):
-        msg = ""
-        for c in "xyrgb":
-            msg += chr(getattr(self, c))
-        return msg
+        return "".join([chr(getattr(self, c)) for c in "xyrgb"])
 
 class Sprite:
     def __init__(self, *leds):
