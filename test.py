@@ -13,9 +13,24 @@ class Led:
         self.r = r
         self.g = g
         self.b = b
+        self.f = 1
 
     def get_msg(self):
-        return "".join([chr(getattr(self, c)) for c in "xyrgb"])
+        s = ""
+        for c in "xyrgbf":
+            b = bin(getattr(self, c)).replace('0b', '').zfill(3)
+            s = b + s
+            print c, b, s
+
+        n = int(s[-8:], 2)
+        m = int(s[2:10], 2)
+
+        msg = chr(n) + chr(m)
+        print m, n, repr(msg)
+        return msg
+
+    def draw(self):
+        ser.write(self.get_msg())
 
 class Sprite:
     def __init__(self, *leds):
@@ -67,12 +82,24 @@ def get_sprite(t, r, g, b):
                 sprite.add(Led(i, j, 0, 0, 0))
     return sprite
 
-sprite0 = get_sprite(space_invader_0, 0, 255, 255)
-sprite1 = get_sprite(space_invader_1, 255, 0, 255)
+#sprite0 = get_sprite(space_invader_0, 0, 255, 255)
+#sprite1 = get_sprite(space_invader_1, 255, 0, 255)
 
-while True:
-    sprite0.draw()
-    time.sleep(1)
-    sprite1.draw()
-    time.sleep(1)
+#while True:
+#    sprite0.draw()
+#    time.sleep(1)
+#    sprite1.draw()
+#    time.sleep(1)
 
+import sys
+
+x = int(sys.argv[1])
+y = int(sys.argv[2])
+r = int(sys.argv[3])
+g = int(sys.argv[4])
+b = int(sys.argv[5])
+
+print x, y, r, g, b
+
+l = Led(x, y, r, g, b)
+l.draw();
