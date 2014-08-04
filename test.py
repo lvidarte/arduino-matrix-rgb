@@ -7,13 +7,13 @@ import serial
 ser = serial.Serial('/dev/ttyACM0', 9600)
 
 class Led:
-    def __init__(self, x, y, r, g, b):
+    def __init__(self, x, y, r, g, b, flip=0):
         self.x = x
         self.y = y
         self.r = r
         self.g = g
         self.b = b
-        self.f = 1
+        self.f = flip
 
     def get_msg(self):
         s = ""
@@ -99,7 +99,12 @@ r = int(sys.argv[3])
 g = int(sys.argv[4])
 b = int(sys.argv[5])
 
-print x, y, r, g, b
+if len(sys.argv) > 6:
+    flip = int(sys.argv[6])
+else:
+    flip = 0
 
-l = Led(x, y, r, g, b)
+print x, y, r, g, b, flip
+
+l = Led(x, y, r, g, b, flip)
 l.draw();
