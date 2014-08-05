@@ -1,117 +1,308 @@
 #include <Colorduino.h>
 #include <SoftwareSerial.h>
 
-#define SERIAL_LEN 2
+#define SCREEN_WIDTH 8
+#define SCREEN_HEIGHT 8
 
-// Commands
-#define CMD_FLIP_PAGE 0
-#define CMD_OFFSCREEN_FRAME_BUFFER 1
-#define CMD_ACTIVE_FRAME_BUFFER 2
+/**
+ * Commands
+ */
+#define CMD_CLEAR B0000
+#define CMD_FLIP  B0001
+#define CMD_SET_X B1000
+#define CMD_SET_Y B1001
+#define CMD_SET_R B1010
+#define CMD_SET_G B1011
+#define CMD_SET_B B1100
+#define CMD_FILL  B1111
 
-unsigned char inData[SERIAL_LEN];
-unsigned char inChar;
+/**
+ * Params
+ */
+#define PARAM_OBJ_LED B00
+#define PARAM_OBJ_COL B01
+#define PARAM_OBJ_ROW B10
+#define PARAM_OBJ_ALL B11
+#define PARAM_PAGE_BG B0
+#define PARAM_PAGE_FG B1
+#define PARAM_NORST   B0
+#define PARAM_RESET   B1
 
-byte index = 0;
-byte actual_frame_buffer = 1;
+/**
+ * Led state
+ */
+typedef struct {
+    byte x = 0;
+    byte y = 0;
+    byte r = 0;
+    byte g = 0;
+    byte b = 0;
+} Led;
 
-void log_command(char *command);
-void log_led_settings(int x, int y,
-                      int r, int g, int b,
-                      int red, int green, int blue);
+Led led;
+
+/**
+ *
+ */
+char log_buffer[48];
+
+
+/**
+ * Functions
+ */
+void set_x(byte param)
+{
+    led.x = param;
+    log_set('x', led.x);
+}
+
+void set_y(byte param)
+{
+    led.y = param;
+    log_set('y', led.y);
+}
+
+void set_r(byte param)
+{
+    led.r = get_color(param);
+    log_set('r', led.r);
+}
+
+void set_g(byte param)
+{
+    led.g = get_color(param);
+    log_set('g', led.g);
+}
+
+void set_b(byte param)
+{
+    led.b = get_color(param);
+    log_set('b', led.b);
+}
+
+void flip_page()
+{
+    Colorduino.FlipPage();
+    Serial.println("flip_page()");
+}
+
+int get_color(byte value)
+{
+    return map(value, 0, 15, 0, 255);
+}
+
+void set_color_led(byte x, byte y, byte r, byte g, byte b, byte page)
+{
+    switch (page) {
+        case PARAM_PAGE_BG:
+            Colorduino.SetPixel(x, y, r, g, b);
+            break;
+
+        case PARAM_PAGE_FG:
+            PixelRGB *p = Colorduino.GetDrawPixel(x, y);
+            p->r = r;
+            p->g = g;
+            p->b = b;
+            break;
+    }
+}
+
+void set_color_row(byte y, byte r, byte g, byte b, byte page = PARAM_PAGE_BG)
+{
+    for (byte x = 0; x < SCREEN_WIDTH; x++)
+    {
+        set_color_led(x, y, r, g, b, page);
+    }
+}
+
+void set_color_col(byte x, byte r, byte g, byte b, byte page = PARAM_PAGE_BG)
+{
+    for (byte y = 0; y < SCREEN_HEIGHT; y++)
+    {
+        set_color_led(x, y, r, g, b, page);
+    }
+}
+
+void set_color_all(byte r, byte g, byte b, byte page = PARAM_PAGE_BG)
+{
+    for (byte x = 0; x < SCREEN_WIDTH; x++)
+    {
+        for (byte y = 0; y < SCREEN_HEIGHT; y++)
+        {
+            set_color_led(x, y, r, g, b, page);
+        }
+    }
+}
+
+void fill(byte param)
+{
+    byte obj = get_param_obj(param);
+    byte page = get_param_page(param);
+    byte reset = get_param_reset(param);
+
+    switch (obj)
+    {
+        case PARAM_OBJ_LED:
+            set_color_led(led.x, led.y, led.r, led.g, led.b, page);
+            break;
+        case PARAM_OBJ_ROW:
+            set_color_row(led.y, led.r, led.g, led.b, page);
+            break;
+        case PARAM_OBJ_COL:
+            set_color_col(led.x, led.r, led.g, led.b, page);
+            break;
+        case PARAM_OBJ_ALL:
+            set_color_all(led.r, led.g, led.b, page);
+            break;
+    }
+
+    if (reset)
+    {
+        led.r = 0;
+        led.g = 0;
+        led.b = 0;
+    }
+
+    log_fill(obj, page, reset);
+}
+
+void clear(byte param)
+{
+    byte obj = get_param_obj(param);
+    byte page = get_param_page(param);
+    byte reset = get_param_reset(param);
+
+    byte r = 0;
+    byte g = 0;
+    byte b = 0;
+
+    switch (obj)
+    {
+        case PARAM_OBJ_LED:
+            set_color_led(led.x, led.y, r, g, b, page);
+            break;
+        case PARAM_OBJ_ROW:
+            set_color_row(led.y, r, g, b, page);
+            break;
+        case PARAM_OBJ_COL:
+            set_color_col(led.x, r, g, b, page);
+            break;
+        case PARAM_OBJ_ALL:
+            set_color_all(r, g, b, page);
+            break;
+    }
+
+    if (reset)
+    {
+        led.r = 0;
+        led.g = 0;
+        led.b = 0;
+    }
+
+    log_clear(obj, page, reset);
+}
+
+byte get_param_obj(byte param)
+{
+    return param & 3;
+}
+
+byte get_param_page(byte param)
+{
+    return (param >> 2) & 1;
+}
+
+byte get_param_reset(byte param)
+{
+    return (param >> 3) & 1;
+}
+
+void log_set(char name, byte value)
+{
+    sprintf(log_buffer, "set_%c(%d)", name, value);
+    Serial.println(log_buffer);
+    log_led_status();
+}
+
+void log_led_status()
+{
+    sprintf(log_buffer, "=> pos(%d, %d) rgb(%d, %d, %d)",
+            led.x, led.y, led.r, led.g, led.b);
+    Serial.println(log_buffer);
+}
+
+void log_fill(byte obj, byte page, byte reset)
+{
+    log_fill_or_clear("fill", obj, page, reset);
+}
+
+void log_clear(byte obj, byte page, byte reset)
+{
+    log_fill_or_clear("clear", obj, page, reset);
+}
+
+void log_fill_or_clear(char *name, byte obj, byte page, byte reset)
+{
+    char *obj_text;
+    switch (obj)
+    {
+        case PARAM_OBJ_LED: obj_text = "led"; break;
+        case PARAM_OBJ_ROW: obj_text = "row"; break;
+        case PARAM_OBJ_COL: obj_text = "col"; break;
+        case PARAM_OBJ_ALL: obj_text = "all"; break;
+    }
+
+    char *page_text;
+    switch (page)
+    {
+        case PARAM_PAGE_BG: page_text = "bg"; break;
+        case PARAM_PAGE_FG: page_text = "fg"; break;
+    }
+
+    char *reset_text;
+    switch (reset)
+    {
+        case PARAM_NORST: reset_text = "norst"; break;
+        case PARAM_RESET: reset_text = "reset"; break;
+    }
+
+    sprintf(log_buffer, "%s(%s, %s, %s)",
+            name, obj_text, page_text, reset_text);
+    Serial.println(log_buffer);
+}
 
 void setup()
 {
     Serial.begin(9600);
     Colorduino.Init();
-    unsigned char whiteBalVal[3] = {36, 63, 63};
+    byte whiteBalVal[3] = {36, 63, 63};
     Colorduino.SetWhiteBal(whiteBalVal);
 }
 
 void loop()
 {
-    while (Serial.available() > 0 && index < SERIAL_LEN)
-    {
-        inChar = Serial.read();
-        inData[index++] = inChar;
-    }
+    if (Serial.available()) {
 
-    if (index == SERIAL_LEN)
-    {
-        index = 0;
+        byte data = Serial.read();
+        byte command = data >> 4;
+        byte param = data & 15;
 
-        int command_mode = inData[1] >> 7;
+        switch (command) {
 
-        if (command_mode) {
+            case CMD_SET_X: set_x(param); break;
+            case CMD_SET_Y: set_y(param); break;
 
-            if (inData[0] == CMD_FLIP_PAGE) {
-                log_command("flip page");
-                Colorduino.FlipPage();
-            }
-            if (inData[0] == CMD_OFFSCREEN_FRAME_BUFFER) {
-                log_command("set offscreen frame buffer");
-                actual_frame_buffer = CMD_OFFSCREEN_FRAME_BUFFER;
-            }
-            if (inData[0] == CMD_ACTIVE_FRAME_BUFFER) {
-                log_command("set active frame buffer");
-                actual_frame_buffer = CMD_ACTIVE_FRAME_BUFFER;
-            }
+            case CMD_SET_R: set_r(param); break;
+            case CMD_SET_G: set_g(param); break;
+            case CMD_SET_B: set_b(param); break;
 
-        } else {
+            case CMD_FLIP: flip_page(); break;
 
-            int x = inData[0] & 7;
-            int y = ((inData[0] >> 3) & 7);
-            int r = (inData[0] >> 6) | ((inData[1] & 1) << 2);
-            int g = (inData[1] >> 1) & 7;
-            int b = (inData[1] >> 4) & 7;
+            case CMD_FILL: fill(param); break;
+            case CMD_CLEAR: clear(param); break;
 
-            int red = map(r, 0, 7, 0, 255);
-            int green = map(g, 0, 7, 0, 255);
-            int blue = map(b, 0, 7, 0, 255);
-
-            log_led_settings(x, y, r, g, b, red, green, blue);
-
-            if (actual_frame_buffer == CMD_OFFSCREEN_FRAME_BUFFER) {
-                Colorduino.SetPixel(x, y, red, green, blue);
-            }
-            if (actual_frame_buffer == CMD_ACTIVE_FRAME_BUFFER) {
-                ColorRGB *p = Colorduino.GetDrawPixel(x, y);
-                p->r = red;
-                p->g = green;
-                p->b = blue;
-            }
         }
 
     }
-}
 
-void log_command(char *command)
-{
-    Serial.print("command: ");
-    Serial.println(command);
-}
-
-void log_led_settings(int x, int y,
-                      int r, int g, int b,
-                      int red, int green, int blue)
-{
-
-    Serial.print("pos[");
-    Serial.print(x);
-    Serial.print(", ");
-    Serial.print(y);
-    Serial.print("] vals[");
-
-    Serial.print(r);
-    Serial.print(", ");
-    Serial.print(g);
-    Serial.print(", ");
-    Serial.print(b);
-    Serial.print("] rgb(");
-
-    Serial.print(red);
-    Serial.print(", ");
-    Serial.print(green);
-    Serial.print(", ");
-    Serial.print(blue);
-    Serial.println(") ");
 }
