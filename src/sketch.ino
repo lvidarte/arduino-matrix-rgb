@@ -83,7 +83,7 @@ void set_b(byte param)
 void flip_page()
 {
     Colorduino.FlipPage();
-    Serial.println("flip_page()");
+    log_text("flip_page()");
 }
 
 int get_color(byte value)
@@ -224,6 +224,11 @@ void log_set(char name, byte value)
     log_led_status();
 }
 
+void log_text(char *text)
+{
+    Serial.println(text);
+}
+
 void log_led_status()
 {
     sprintf(log_buffer, "=> pos(%d, %d) rgb(%d, %d, %d)",
@@ -281,14 +286,14 @@ void setup()
 
 void loop()
 {
-    if (Serial.available()) {
-
+    if (Serial.available())
+    {
         byte data = Serial.read();
         byte command = data >> 4;
         byte param = data & 15;
 
-        switch (command) {
-
+        switch (command)
+        {
             case CMD_SET_X: set_x(param); break;
             case CMD_SET_Y: set_y(param); break;
 
@@ -300,9 +305,6 @@ void loop()
 
             case CMD_FILL: fill(param); break;
             case CMD_CLEAR: clear(param); break;
-
         }
-
     }
-
 }
