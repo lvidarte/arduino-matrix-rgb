@@ -1,8 +1,10 @@
 #include <Colorduino.h>
 #include <SoftwareSerial.h>
 
-#define SCREEN_WIDTH 8
+#define SCREEN_WIDTH  8
 #define SCREEN_HEIGHT 8
+#define MASK_WIDTH    B111
+#define MASK_HEIGHT   B111
 
 /**
  * Commands
@@ -52,13 +54,13 @@ char log_buffer[48];
  */
 void set_x(byte param)
 {
-    led.x = param;
+    led.x = get_pos(param, MASK_WIDTH);
     log_set('x', led.x);
 }
 
 void set_y(byte param)
 {
-    led.y = param;
+    led.y = get_pos(param, MASK_HEIGHT);
     log_set('y', led.y);
 }
 
@@ -86,6 +88,11 @@ void flip_page()
     log_text("flip_page()");
 }
 
+int get_pos(byte value, byte mask)
+{
+    return value & mask;
+}
+
 int get_color(byte value)
 {
     return map(value, 0, 15, 0, 255);
@@ -93,7 +100,8 @@ int get_color(byte value)
 
 void set_color_led(byte x, byte y, byte r, byte g, byte b, byte page)
 {
-    switch (page) {
+    switch (page)
+    {
         case PARAM_PAGE_BG:
             Colorduino.SetPixel(x, y, r, g, b);
             break;
@@ -119,6 +127,9 @@ void set_color_col(byte x, byte r, byte g, byte b, byte page = PARAM_PAGE_BG)
 {
     for (byte y = 0; y < SCREEN_HEIGHT; y++)
     {
+        Serial.print(x);
+        Serial.print(",");
+        Serial.println(y);
         set_color_led(x, y, r, g, b, page);
     }
 }
@@ -134,48 +145,8 @@ void set_color_all(byte r, byte g, byte b, byte page = PARAM_PAGE_BG)
     }
 }
 
-void fill(byte param)
+void set_color(byte obj, byte r, byte g, byte b, byte page = PARAM_PAGE_BG)
 {
-    byte obj = get_param_obj(param);
-    byte page = get_param_page(param);
-    byte reset = get_param_reset(param);
-
-    switch (obj)
-    {
-        case PARAM_OBJ_LED:
-            set_color_led(led.x, led.y, led.r, led.g, led.b, page);
-            break;
-        case PARAM_OBJ_ROW:
-            set_color_row(led.y, led.r, led.g, led.b, page);
-            break;
-        case PARAM_OBJ_COL:
-            set_color_col(led.x, led.r, led.g, led.b, page);
-            break;
-        case PARAM_OBJ_ALL:
-            set_color_all(led.r, led.g, led.b, page);
-            break;
-    }
-
-    if (reset)
-    {
-        led.r = 0;
-        led.g = 0;
-        led.b = 0;
-    }
-
-    log_fill(obj, page, reset);
-}
-
-void clear(byte param)
-{
-    byte obj = get_param_obj(param);
-    byte page = get_param_page(param);
-    byte reset = get_param_reset(param);
-
-    byte r = 0;
-    byte g = 0;
-    byte b = 0;
-
     switch (obj)
     {
         case PARAM_OBJ_LED:
@@ -191,15 +162,44 @@ void clear(byte param)
             set_color_all(r, g, b, page);
             break;
     }
+}
+
+void set_leds(byte command, byte param)
+{
+    byte obj = get_param_obj(param);
+    byte page = get_param_page(param);
+    byte reset = get_param_reset(param);
+
+    switch (command)
+    {
+        case CMD_FILL:
+            set_color(obj, led.r, led.g, led.b, page);
+            break;
+
+        case CMD_CLEAR:
+            set_color(obj, 0, 0, 0, page);
+            break;
+    }
 
     if (reset)
     {
         led.r = 0;
         led.g = 0;
         led.b = 0;
+        log_led_status();
     }
 
-    log_clear(obj, page, reset);
+    log_set_leds(command, obj, page, reset);
+}
+
+void fill(byte param)
+{
+    set_leds(CMD_FILL, param);
+}
+
+void clear(byte param)
+{
+    set_leds(CMD_CLEAR, param);
 }
 
 byte get_param_obj(byte param)
@@ -236,43 +236,40 @@ void log_led_status()
     Serial.println(log_buffer);
 }
 
-void log_fill(byte obj, byte page, byte reset)
+void log_set_leds(byte command, byte obj, byte page, byte reset)
 {
-    log_fill_or_clear("fill", obj, page, reset);
-}
+    char *command_name;
+    switch (command)
+    {
+        case CMD_FILL : command_name = "fill" ; break;
+        case CMD_CLEAR: command_name = "clear"; break;
+    }
 
-void log_clear(byte obj, byte page, byte reset)
-{
-    log_fill_or_clear("clear", obj, page, reset);
-}
-
-void log_fill_or_clear(char *name, byte obj, byte page, byte reset)
-{
-    char *obj_text;
+    char *obj_name;
     switch (obj)
     {
-        case PARAM_OBJ_LED: obj_text = "led"; break;
-        case PARAM_OBJ_ROW: obj_text = "row"; break;
-        case PARAM_OBJ_COL: obj_text = "col"; break;
-        case PARAM_OBJ_ALL: obj_text = "all"; break;
+        case PARAM_OBJ_LED: obj_name = "led"; break;
+        case PARAM_OBJ_ROW: obj_name = "row"; break;
+        case PARAM_OBJ_COL: obj_name = "col"; break;
+        case PARAM_OBJ_ALL: obj_name = "all"; break;
     }
 
-    char *page_text;
+    char *page_name;
     switch (page)
     {
-        case PARAM_PAGE_BG: page_text = "bg"; break;
-        case PARAM_PAGE_FG: page_text = "fg"; break;
+        case PARAM_PAGE_BG: page_name = "bg"; break;
+        case PARAM_PAGE_FG: page_name = "fg"; break;
     }
 
-    char *reset_text;
+    char *reset_name;
     switch (reset)
     {
-        case PARAM_NORST: reset_text = "norst"; break;
-        case PARAM_RESET: reset_text = "reset"; break;
+        case PARAM_NORST: reset_name = "norst"; break;
+        case PARAM_RESET: reset_name = "reset"; break;
     }
 
     sprintf(log_buffer, "%s(%s, %s, %s)",
-            name, obj_text, page_text, reset_text);
+            command_name, obj_name, page_name, reset_name);
     Serial.println(log_buffer);
 }
 
@@ -301,9 +298,9 @@ void loop()
             case CMD_SET_G: set_g(param); break;
             case CMD_SET_B: set_b(param); break;
 
-            case CMD_FLIP: flip_page(); break;
+            case CMD_FLIP : flip_page() ; break;
 
-            case CMD_FILL: fill(param); break;
+            case CMD_FILL : fill(param) ; break;
             case CMD_CLEAR: clear(param); break;
         }
     }
