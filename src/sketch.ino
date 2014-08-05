@@ -127,9 +127,6 @@ void set_color_col(byte x, byte r, byte g, byte b, byte page = PARAM_PAGE_BG)
 {
     for (byte y = 0; y < SCREEN_HEIGHT; y++)
     {
-        Serial.print(x);
-        Serial.print(",");
-        Serial.println(y);
         set_color_led(x, y, r, g, b, page);
     }
 }
