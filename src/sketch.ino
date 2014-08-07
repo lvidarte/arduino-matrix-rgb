@@ -224,6 +224,44 @@ byte get_param_debug(byte param)
     return param & 1;
 }
 
+char *get_command_name(byte command)
+{
+    switch (command)
+    {
+        case CMD_FILL : return "fill" ; break;
+        case CMD_CLEAR: return "clear"; break;
+    }
+}
+
+char *get_obj_name(byte obj)
+{
+    switch (obj)
+    {
+        case PARAM_OBJ_LED: return "led"; break;
+        case PARAM_OBJ_ROW: return "row"; break;
+        case PARAM_OBJ_COL: return "col"; break;
+        case PARAM_OBJ_ALL: return "all"; break;
+    }
+}
+
+char *get_page_name(byte page)
+{
+    switch (page)
+    {
+        case PARAM_PAGE_BG: return "bg"; break;
+        case PARAM_PAGE_FG: return "fg"; break;
+    }
+}
+
+char *get_reset_name(byte reset)
+{
+    switch (reset)
+    {
+        case PARAM_OFF: return "off"; break;
+        case PARAM_ON : return "on" ; break;
+    }
+}
+
 void log_set(char name, byte value)
 {
     if (debug)
@@ -256,35 +294,10 @@ void log_set_leds(byte command, byte obj, byte page, byte reset)
 {
     if (debug)
     {
-        char *command_name;
-        switch (command)
-        {
-            case CMD_FILL : command_name = "fill" ; break;
-            case CMD_CLEAR: command_name = "clear"; break;
-        }
-
-        char *obj_name;
-        switch (obj)
-        {
-            case PARAM_OBJ_LED: obj_name = "led"; break;
-            case PARAM_OBJ_ROW: obj_name = "row"; break;
-            case PARAM_OBJ_COL: obj_name = "col"; break;
-            case PARAM_OBJ_ALL: obj_name = "all"; break;
-        }
-
-        char *page_name;
-        switch (page)
-        {
-            case PARAM_PAGE_BG: page_name = "bg"; break;
-            case PARAM_PAGE_FG: page_name = "fg"; break;
-        }
-
-        char *reset_name;
-        switch (reset)
-        {
-            case PARAM_OFF: reset_name = "off"; break;
-            case PARAM_ON : reset_name = "on" ; break;
-        }
+        char *command_name = get_command_name(command);
+        char *obj_name = get_obj_name(obj);
+        char *page_name = get_page_name(page);
+        char *reset_name = get_reset_name(reset);
 
         sprintf(log_buffer, "%s(obj=%s, page=%s, reset=%s)",
                 command_name, obj_name, page_name, reset_name);
