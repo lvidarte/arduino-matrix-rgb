@@ -21,8 +21,8 @@ class Matrix(object):
     PARAM_OBJ_ALL   =   0b11
     PARAM_PAGE_BG   =  0b000
     PARAM_PAGE_FG   =  0b100
-    PARAM_NORST     = 0b0000
-    PARAM_RESET     = 0b1000
+    PARAM_RESET_OFF = 0b0000
+    PARAM_RESET_ON  = 0b1000
     PARAM_DEBUG_OFF =    0b0
     PARAM_DEBUG_ON  =    0b1
 
@@ -40,8 +40,8 @@ class Matrix(object):
     }
 
     PARAM_RESET_NAMES = {
-        PARAM_RESET: 'on',
-        PARAM_NORST: 'off',
+        PARAM_RESET_ON : 'on',
+        PARAM_RESET_OFF: 'off',
     }
 
     def __init__(self, conn):
@@ -126,7 +126,7 @@ class Matrix(object):
 
     @property
     def obj(self):
-        return self._obj
+        return self.PARAM_OBJ_NAMES[self._obj]
 
     def set_obj_led(self):
         self._obj = self.PARAM_OBJ_LED
@@ -142,7 +142,7 @@ class Matrix(object):
 
     @property
     def page(self):
-        return self._page
+        return self.PARAM_PAGE_NAMES[self._page]
 
     def set_page_fg(self):
         self._page = self.PARAM_PAGE_FG
@@ -152,13 +152,13 @@ class Matrix(object):
 
     @property
     def reset(self):
-        return self._reset
+        return self.PARAM_RESET_NAMES[self._reset]
 
     def set_reset_on(self):
-        self._reset = self.PARAM_RESET
+        self._reset = self.PARAM_RESET_ON
 
     def set_reset_off(self):
-        self._reset = self.PARAM_NORST
+        self._reset = self.PARAM_RESET_OFF
 
     def flip(self):
         self.send(self.CMD_FLIP, 0)
@@ -170,6 +170,66 @@ class Matrix(object):
         param = obj | page | reset
         self.send(self.CMD_FILL, param)
 
+    def fill_led(self):
+        self.fill(self.PARAM_OBJ_LED,
+                  self._page,
+                  self.PARAM_RESET_OFF)
+
+    def fill_led_bg(self):
+        self.fill(self.PARAM_OBJ_LED,
+                  self.PARAM_PAGE_BG,
+                  self.PARAM_RESET_OFF)
+
+    def fill_led_fg(self):
+        self.fill(self.PARAM_OBJ_LED,
+                  self.PARAM_PAGE_FG,
+                  self.PARAM_RESET_OFF)
+
+    def fill_col(self):
+        self.fill(self.PARAM_OBJ_COL,
+                  self._page,
+                  self.PARAM_RESET_OFF)
+
+    def fill_col_bg(self):
+        self.fill(self.PARAM_OBJ_COL,
+                  self.PARAM_PAGE_BG,
+                  self.PARAM_RESET_OFF)
+
+    def fill_col_fg(self):
+        self.fill(self.PARAM_OBJ_COL,
+                  self.PARAM_PAGE_FG,
+                  self.PARAM_RESET_OFF)
+
+    def fill_row(self):
+        self.fill(self.PARAM_OBJ_ROW,
+                  self._page,
+                  self.PARAM_RESET_OFF)
+
+    def fill_row_bg(self):
+        self.fill(self.PARAM_OBJ_ROW,
+                  self.PARAM_PAGE_BG,
+                  self.PARAM_RESET_OFF)
+
+    def fill_row_fg(self):
+        self.fill(self.PARAM_OBJ_ROW,
+                  self.PARAM_PAGE_FG,
+                  self.PARAM_RESET_OFF)
+
+    def fill_all(self):
+        self.fill(self.PARAM_OBJ_ALL,
+                  self._page,
+                  self.PARAM_RESET_OFF)
+
+    def fill_all_bg(self):
+        self.fill(self.PARAM_OBJ_ALL,
+                  self.PARAM_PAGE_BG,
+                  self.PARAM_RESET_OFF)
+
+    def fill_all_fg(self):
+        self.fill(self.PARAM_OBJ_ALL,
+                  self.PARAM_PAGE_FG,
+                  self.PARAM_RESET_OFF)
+
     def clear(self, obj=None, page=None, reset=None):
         obj   = self._get_obj(obj)
         page  = self._get_page(page)
@@ -177,23 +237,80 @@ class Matrix(object):
         param = obj | page | reset
         self.send(self.CMD_CLEAR, param)
 
-    def _get_obj(self, obj=None):
-        if obj is None:
-            return self.obj
-        else:
-            return obj
+    def clear_led(self):
+        self.clear(self.PARAM_OBJ_LED,
+                   self._page,
+                   self.PARAM_RESET_OFF)
 
-    def _get_reset(self, reset=None):
-        if reset is None:
-            return self.reset
+    def clear_led_bg(self):
+        self.clear(self.PARAM_OBJ_LED,
+                   self.PARAM_PAGE_BG,
+                   self.PARAM_RESET_OFF)
+
+    def clear_led_fg(self):
+        self.clear(self.PARAM_OBJ_LED,
+                   self.PARAM_PAGE_FG,
+                   self.PARAM_RESET_OFF)
+
+    def clear_col(self):
+        self.clear(self.PARAM_OBJ_COL,
+                   self._page,
+                   self.PARAM_RESET_OFF)
+
+    def clear_col_bg(self):
+        self.clear(self.PARAM_OBJ_COL,
+                   self.PARAM_PAGE_BG,
+                   self.PARAM_RESET_OFF)
+
+    def clear_col_fg(self):
+        self.clear(self.PARAM_OBJ_COL,
+                   self.PARAM_PAGE_FG,
+                   self.PARAM_RESET_OFF)
+
+    def clear_row(self):
+        self.clear(self.PARAM_OBJ_ROW,
+                   self._page,
+                   self.PARAM_RESET_OFF)
+
+    def clear_row_bg(self):
+        self.clear(self.PARAM_OBJ_ROW,
+                   self.PARAM_PAGE_BG,
+                   self.PARAM_RESET_OFF)
+
+    def clear_row_fg(self):
+        self.clear(self.PARAM_OBJ_ROW,
+                   self.PARAM_PAGE_FG,
+                   self.PARAM_RESET_OFF)
+
+    def clear_all(self):
+        self.clear(self.PARAM_OBJ_ALL,
+                   self._page,
+                   self.PARAM_RESET_OFF)
+
+    def clear_all_bg(self):
+        self.clear(self.PARAM_OBJ_ALL,
+                   self.PARAM_PAGE_BG,
+                   self.PARAM_RESET_OFF)
+
+    def clear_all_fg(self):
+        self.clear(self.PARAM_OBJ_ALL,
+                   self.PARAM_PAGE_FG,
+                   self.PARAM_RESET_OFF)
+
+    def _get_value(self, name, value=None):
+        if value is None:
+            return getattr(self, '_%s' % name)
         else:
-            return reset
+            return value
+
+    def _get_obj(self, obj=None):
+        return self._get_value('obj', obj)
 
     def _get_page(self, page=None):
-        if page is None:
-            return self.page
-        else:
-            return page
+        return self._get_value('page', page)
+
+    def _get_reset(self, reset=None):
+        return self._get_value('reset', reset)
 
     def reset_matrix(self):
         self.x = 0
@@ -205,16 +322,10 @@ class Matrix(object):
         self.set_page_fg()
         self.set_reset_off()
 
-    def reset_page_bg(self):
-        self.clear(self.PARAM_OBJ_ALL, self.PARAM_PAGE_BG)
-
-    def reset_page_fg(self):
-        self.clear(self.PARAM_OBJ_ALL, self.PARAM_PAGE_FG)
-
     def reset_all(self):
         self.reset_matrix()
-        self.reset_page_bg()
-        self.reset_page_fg()
+        self.clear_all_bg()
+        self.clear_all_fg()
 
     def set_debug_on(self):
         self.send(self.CMD_DEBUG, self.PARAM_DEBUG_ON)
@@ -230,34 +341,9 @@ class Matrix(object):
         return self.__str__()
 
     def __str__(self):
-        obj = self.PARAM_OBJ_NAMES[self.obj]
-        page = self.PARAM_PAGE_NAMES[self.page]
-        reset = self.PARAM_RESET_NAMES[self.reset]
         return "xy(%s, %s) rgb(%s, %s, %s) obj:%s page:%s reset:%s" % (
                 self.x, self.y, self.r, self.g, self.b, 
-                obj, page, reset
-               )
-
-    def __init__(self, x=0, y=0, r=0, g=0, b=0):
-        self.x = x
-        self.y = y
-        self.r = r
-        self.g = g
-        self.b = b
-
-    def get_msg(self):
-        s = ""
-        for c in "xyrgbm":
-            b = bin(getattr(self, c)).replace('0b', '').zfill(3)
-            s = b + s
-
-        n = int(s[-8:], 2)
-        m = int(s[2:10], 2)
-        msg = chr(n) + chr(m)
-        return msg
-
-    def draw(self):
-        conn.write(self.get_msg())
+                self.obj, self.page, self.reset) 
 
 
 if __name__ == '__main__':
