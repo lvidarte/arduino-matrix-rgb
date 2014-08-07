@@ -16,6 +16,7 @@
 #define CMD_SET_R B1010
 #define CMD_SET_G B1011
 #define CMD_SET_B B1100
+#define CMD_DEBUG B1110
 #define CMD_FILL  B1111
 
 /**
@@ -27,8 +28,9 @@
 #define PARAM_OBJ_ALL B11
 #define PARAM_PAGE_BG B0
 #define PARAM_PAGE_FG B1
-#define PARAM_NORST   B0
-#define PARAM_RESET   B1
+#define PARAM_OFF     B0
+#define PARAM_ON      B1
+
 
 /**
  * Led state
@@ -47,6 +49,8 @@ Led led;
  *
  */
 char log_buffer[48];
+
+byte debug = 0;
 
 
 /**
@@ -178,15 +182,16 @@ void set_leds(byte command, byte param)
             break;
     }
 
+    log_set_leds(command, obj, page, reset);
+
     if (reset)
     {
         led.r = 0;
         led.g = 0;
         led.b = 0;
+
         log_led_status();
     }
-
-    log_set_leds(command, obj, page, reset);
 }
 
 void fill(byte param)
@@ -214,60 +219,83 @@ byte get_param_reset(byte param)
     return (param >> 3) & 1;
 }
 
+byte get_param_debug(byte param)
+{
+    return param & 1;
+}
+
 void log_set(char name, byte value)
 {
-    sprintf(log_buffer, "set_%c(%d)", name, value);
-    Serial.println(log_buffer);
-    log_led_status();
+    if (debug)
+    {
+        sprintf(log_buffer, "set_%c(%d)", name, value);
+        Serial.println(log_buffer);
+        log_led_status();
+    }
 }
 
 void log_text(char *text)
 {
-    Serial.println(text);
+    if (debug)
+    {
+        Serial.println(text);
+    }
 }
 
 void log_led_status()
 {
-    sprintf(log_buffer, "=> pos(%d, %d) rgb(%d, %d, %d)",
-            led.x, led.y, led.r, led.g, led.b);
-    Serial.println(log_buffer);
+    if (debug)
+    {
+        sprintf(log_buffer, "=> pos(%d, %d) rgb(%d, %d, %d)",
+                led.x, led.y, led.r, led.g, led.b);
+        Serial.println(log_buffer);
+    }
 }
 
 void log_set_leds(byte command, byte obj, byte page, byte reset)
 {
-    char *command_name;
-    switch (command)
+    if (debug)
     {
-        case CMD_FILL : command_name = "fill" ; break;
-        case CMD_CLEAR: command_name = "clear"; break;
-    }
+        char *command_name;
+        switch (command)
+        {
+            case CMD_FILL : command_name = "fill" ; break;
+            case CMD_CLEAR: command_name = "clear"; break;
+        }
 
-    char *obj_name;
-    switch (obj)
-    {
-        case PARAM_OBJ_LED: obj_name = "led"; break;
-        case PARAM_OBJ_ROW: obj_name = "row"; break;
-        case PARAM_OBJ_COL: obj_name = "col"; break;
-        case PARAM_OBJ_ALL: obj_name = "all"; break;
-    }
+        char *obj_name;
+        switch (obj)
+        {
+            case PARAM_OBJ_LED: obj_name = "led"; break;
+            case PARAM_OBJ_ROW: obj_name = "row"; break;
+            case PARAM_OBJ_COL: obj_name = "col"; break;
+            case PARAM_OBJ_ALL: obj_name = "all"; break;
+        }
 
-    char *page_name;
-    switch (page)
-    {
-        case PARAM_PAGE_BG: page_name = "bg"; break;
-        case PARAM_PAGE_FG: page_name = "fg"; break;
-    }
+        char *page_name;
+        switch (page)
+        {
+            case PARAM_PAGE_BG: page_name = "bg"; break;
+            case PARAM_PAGE_FG: page_name = "fg"; break;
+        }
 
-    char *reset_name;
-    switch (reset)
-    {
-        case PARAM_NORST: reset_name = "norst"; break;
-        case PARAM_RESET: reset_name = "reset"; break;
-    }
+        char *reset_name;
+        switch (reset)
+        {
+            case PARAM_OFF: reset_name = "off"; break;
+            case PARAM_ON : reset_name = "on" ; break;
+        }
 
-    sprintf(log_buffer, "%s(%s, %s, %s)",
-            command_name, obj_name, page_name, reset_name);
-    Serial.println(log_buffer);
+        sprintf(log_buffer, "%s(obj=%s, page=%s, reset=%s)",
+                command_name, obj_name, page_name, reset_name);
+        Serial.println(log_buffer);
+    }
+}
+
+void set_debug(byte param)
+{
+    debug = get_param_debug(param);
+    Serial.println(debug ? "debug on" : "debug off");
 }
 
 void setup()
@@ -299,6 +327,10 @@ void loop()
 
             case CMD_FILL : fill(param) ; break;
             case CMD_CLEAR: clear(param); break;
+
+            case CMD_DEBUG: set_debug(param); break;
+
+            default: log_led_status();
         }
     }
 }
