@@ -583,9 +583,15 @@ if __name__ == '__main__':
             random_lines,
             tunnel,
         )
+        next_example_index = lambda: random.randint(0, len(examples) - 1)
+        next_example = lambda: examples[next_example_index()]
+        current = None
         while True:
-            e = random.randint(0, len(examples) - 1)
-            print e
-            for i in range(random.randint(1, 10)):
-                examples[e](sec)
+            next = next_example()
+            if (next == current):
+                continue
+            current = next
+            print "%s(%s)" % (current.__name__, sec)
+            for i in range(random.randint(5, 10)):
+                current(sec)
 
