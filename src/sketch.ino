@@ -186,12 +186,19 @@ void set_leds(byte command, byte param)
 
     if (reset)
     {
-        led.r = 0;
-        led.g = 0;
-        led.b = 0;
-
-        log_led_status();
+        reset_matrix();
     }
+}
+
+void reset_matrix()
+{
+    led.x = 0;
+    led.y = 0;
+    led.r = 0;
+    led.g = 0;
+    led.b = 0;
+
+    log_led_status();
 }
 
 void fill(byte param)
