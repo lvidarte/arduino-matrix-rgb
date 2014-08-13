@@ -345,10 +345,12 @@ class Matrix(object):
         self.clear(self.PARAM_OBJ_ALL,
                    self.PARAM_PAGE_FG)
 
-    def rect(self, width=3, height=3, x=None, y=None):
+    def rect(self, x=None, y=None, width=3, height=3):
         """Draw a rectangle"""
-        x = x or self._x
-        y = y or self._y
+        if x is None:
+            x = self._x
+        if y is None:
+            y = self._y
         for n in range(width):
             _x = x + n
             _y = y + height - 1
@@ -363,9 +365,9 @@ class Matrix(object):
                 self.set(x=_x, y=_y) 
         self.x, self.y = x, y
 
-    def square(self, size=3, x=None, y=None):
+    def square(self, x=None, y=None, size=3):
         """Draw a square"""
-        self.rect(size, size, x, y)
+        self.rect(x, y, size, size)
 
     def line_horizontal(self, size=5, x=None, y=None):
         """Draw a horizontal line"""
@@ -568,9 +570,9 @@ if __name__ == '__main__':
             m.set_rand_y()
             m.set_rand_rgb()
             if random.randint(0, 1):
-                m.set_col()
+                m.fill_col()
             else:
-                m.set_row()
+                m.fill_row()
             time.sleep(sec)
 
     def random_lines_forever_fg(sec=.1, amount=5):
@@ -604,6 +606,42 @@ if __name__ == '__main__':
         while True:
             tunnel(sec)
 
+    def chessboard(sec=.1, page=None):
+        if page == m.PARAM_PAGE_BG:
+            m.set_page_bg()
+        else:
+            m.set_page_fg()
+        matrix = [
+            [0, 2, 5, 7, 8, 10, 13, 15],
+            [1, 3, 4, 6, 9, 11, 12, 14],
+        ]
+        for i in (0, 1):
+            m.clear_all()
+            random.shuffle(matrix[i])
+            for s in matrix[i]:
+                x = (s % 4) * 2
+                y = (s / 4) * 2
+                m.set_rand_rgb()
+                m.square(x, y, 2)
+                time.sleep(sec)
+            if page == m.PARAM_PAGE_BG:
+                m.flip()
+                time.sleep(sec * 8)
+
+    def chessboard_forever_fg(sec=.1):
+        """Draw forever a chessboard on foreground,
+           random color cells"""
+        m.reset()
+        while True:
+            chessboard(sec)
+
+    def chessboard_forever_bg(sec=.1):
+        """Draw forever a chessboard on background,
+           random color cells"""
+        m.reset()
+        while True:
+            chessboard(sec, page=m.PARAM_PAGE_BG)
+
     def demo(sec=.1):
         examples = (
             random_dots,
@@ -612,6 +650,7 @@ if __name__ == '__main__':
             cols,
             random_lines,
             tunnel,
+            chessboard,
         )
         next_example_index = lambda: random.randint(0, len(examples) - 1)
         next_example = lambda: examples[next_example_index()]
