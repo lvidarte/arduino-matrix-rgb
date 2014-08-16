@@ -369,13 +369,13 @@ class Matrix(object):
         """Draw a square"""
         self.rect(x, y, size, size)
 
-    def line_horizontal(self, size=5, x=None, y=None):
+    def line_horizontal(self, x=None, y=None, size=5):
         """Draw a horizontal line"""
-        self.rect(width=size, height=1, x=x, y=y)
+        self.rect(x=x, y=y, width=size, height=1)
 
-    def line_vertical(self, size=5, x=None, y=None):
+    def line_vertical(self, x=None, y=None, size=5):
         """Draw a vertical line"""
-        self.rect(width=1, height=size, x=x, y=y)
+        self.rect(x=x, y=y, width=1, height=size)
 
     def _get_param(self, obj, page, reset):
         obj   = self._get_obj(obj)
