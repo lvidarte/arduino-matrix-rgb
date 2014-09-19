@@ -1,6 +1,4 @@
-# awesome-2048
-
-Arduino Matrix RGB serial protocol for [ElecFreaks RGB Matrix Shield](http://www.elecfreaks.com/wiki/index.php?title=RGB_Matrix_Shield)
+# Arduino Matrix RGB serial protocol for [ElecFreaks RGB Matrix Shield](http://www.elecfreaks.com/wiki/index.php?title=RGB_Matrix_Shield)
 
 ![ElecFreaks RGB Matrix Shield](https://github.com/lvidarte/arduino-matrix-rgb/blob/master/rgb-matrix.png)
 
