@@ -21,6 +21,17 @@ Then build and upload the Arduino sketch. I use [inotool](http://inotool.org) fo
 
 Run matrix module in Shell mode
 
-    $ matrix/matrix.py
-    >>> demo.start()
+    $ matrix/shell.py /dev/ttyACM0
 
+    Welcome to matrix shell
+    Autocompletion and history are enabled
+
+    Objects:
+        serial    (object)  serial = Serial()
+        matrix    (object)  matrix = Matrix(serial)
+        demo      (object)  demo = Demo(matrix)
+
+    Try the demo:
+        demo.start()
+
+    >>>

@@ -58,5 +58,5 @@ Objects:
     demo      (object)  demo = Demo(matrix)
 
 Try the demo:
-    >>> demo.start()
+    demo.start()
 """
