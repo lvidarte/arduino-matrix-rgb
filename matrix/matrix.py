@@ -1,61 +1,49 @@
-#!/usr/bin/python -i
-
-import sys
-import time
 import random
-import serial
 
-try:
-    conn = serial.Serial('/dev/ttyACM0', 9600)
-except OSError:
-    try:
-        conn = serial.Serial('/dev/ttyACM1', 9600)
-    except OSError:
-        print "Can't connect to serial device"
-        sys.exit(1)
+
+CMD_CLEAR = 0b0000
+CMD_FLIP  = 0b0001
+CMD_SET_X = 0b1000
+CMD_SET_Y = 0b1001
+CMD_SET_R = 0b1010
+CMD_SET_G = 0b1011
+CMD_SET_B = 0b1100
+CMD_DEBUG = 0b1110
+CMD_FILL  = 0b1111
+
+PARAM_OBJ_LED   =   0b00
+PARAM_OBJ_COL   =   0b01
+PARAM_OBJ_ROW   =   0b10
+PARAM_OBJ_ALL   =   0b11
+PARAM_PAGE_BG   =  0b000
+PARAM_PAGE_FG   =  0b100
+PARAM_RESET_OFF = 0b0000
+PARAM_RESET_ON  = 0b1000
+PARAM_DEBUG_OFF =    0b0
+PARAM_DEBUG_ON  =    0b1
+
+MASK_POS   = 0b0111
+MASK_COLOR = 0b1111
+
+PARAM_OBJ_NAMES = {
+    PARAM_OBJ_LED: 'led',
+    PARAM_OBJ_COL: 'col',
+    PARAM_OBJ_ROW: 'row',
+    PARAM_OBJ_ALL: 'all',
+}
+
+PARAM_PAGE_NAMES = {
+    PARAM_PAGE_BG: 'bg',
+    PARAM_PAGE_FG: 'fg',
+}
+
+PARAM_RESET_NAMES = {
+    PARAM_RESET_ON : 'on',
+    PARAM_RESET_OFF: 'off',
+}
+
 
 class Matrix(object):
-
-    CMD_CLEAR = 0b0000
-    CMD_FLIP  = 0b0001
-    CMD_SET_X = 0b1000
-    CMD_SET_Y = 0b1001
-    CMD_SET_R = 0b1010
-    CMD_SET_G = 0b1011
-    CMD_SET_B = 0b1100
-    CMD_DEBUG = 0b1110
-    CMD_FILL  = 0b1111
-
-    PARAM_OBJ_LED   =   0b00
-    PARAM_OBJ_COL   =   0b01
-    PARAM_OBJ_ROW   =   0b10
-    PARAM_OBJ_ALL   =   0b11
-    PARAM_PAGE_BG   =  0b000
-    PARAM_PAGE_FG   =  0b100
-    PARAM_RESET_OFF = 0b0000
-    PARAM_RESET_ON  = 0b1000
-    PARAM_DEBUG_OFF =    0b0
-    PARAM_DEBUG_ON  =    0b1
-
-    MASK_POS   = 0b0111
-    MASK_COLOR = 0b1111
-
-    PARAM_OBJ_NAMES = {
-        PARAM_OBJ_LED: 'led',
-        PARAM_OBJ_COL: 'col',
-        PARAM_OBJ_ROW: 'row',
-        PARAM_OBJ_ALL: 'all',
-    }
-
-    PARAM_PAGE_NAMES = {
-        PARAM_PAGE_BG: 'bg',
-        PARAM_PAGE_FG: 'fg',
-    }
-
-    PARAM_RESET_NAMES = {
-        PARAM_RESET_ON : 'on',
-        PARAM_RESET_OFF: 'off',
-    }
 
     def __init__(self, conn):
         self.conn = conn
@@ -73,10 +61,10 @@ class Matrix(object):
     @x.setter
     def x(self, value):
         if value is not None:
-            value &= self.MASK_POS
+            value &= MASK_POS
             if self._x != value:
                 self._x = value
-                self._send(self.CMD_SET_X, value)
+                self._send(CMD_SET_X, value)
 
     @property
     def y(self):
@@ -85,10 +73,10 @@ class Matrix(object):
     @y.setter
     def y(self, value):
         if value is not None:
-            value &= self.MASK_POS
+            value &= MASK_POS
             if self._y != value:
                 self._y = value
-                self._send(self.CMD_SET_Y, value)
+                self._send(CMD_SET_Y, value)
 
     @property
     def r(self):
@@ -97,10 +85,10 @@ class Matrix(object):
     @r.setter
     def r(self, value):
         if value is not None:
-            value &= self.MASK_COLOR
+            value &= MASK_COLOR
             if self._r != value:
                 self._r = value
-                self._send(self.CMD_SET_R, value)
+                self._send(CMD_SET_R, value)
 
     @property
     def g(self):
@@ -109,10 +97,10 @@ class Matrix(object):
     @g.setter
     def g(self, value):
         if value is not None:
-            value &= self.MASK_COLOR
+            value &= MASK_COLOR
             if self._g != value:
                 self._g = value
-                self._send(self.CMD_SET_G, value)
+                self._send(CMD_SET_G, value)
 
     @property
     def b(self):
@@ -121,49 +109,49 @@ class Matrix(object):
     @b.setter
     def b(self, value):
         if value is not None:
-            value &= self.MASK_COLOR
+            value &= MASK_COLOR
             if self._b != value:
                 self._b = value
-                self._send(self.CMD_SET_B, value)
+                self._send(CMD_SET_B, value)
 
     def set_obj_led(self):
         """Sets the actual object to 'led'"""
-        self._obj = self.PARAM_OBJ_LED
+        self._obj = PARAM_OBJ_LED
 
     def set_obj_row(self):
         """Sets the actual object to 'row'"""
-        self._obj = self.PARAM_OBJ_ROW
+        self._obj = PARAM_OBJ_ROW
 
     def set_obj_col(self):
         """Sets the actual object to 'col'"""
-        self._obj = self.PARAM_OBJ_COL
+        self._obj = PARAM_OBJ_COL
 
     def set_obj_all(self):
         """Sets the actual object to 'all'"""
-        self._obj = self.PARAM_OBJ_ALL
+        self._obj = PARAM_OBJ_ALL
 
     def set_page_fg(self):
         """Sets the writing on page foreground"""
-        self._page = self.PARAM_PAGE_FG
+        self._page = PARAM_PAGE_FG
 
     def set_page_bg(self):
         """Sets the writing on page background"""
-        self._page = self.PARAM_PAGE_BG
+        self._page = PARAM_PAGE_BG
 
     def set_reset_on(self):
         """Sets the reset mode on
            for put on 0 the arduino xyrgb state
            after fill or clear action"""
-        self._reset = self.PARAM_RESET_ON
+        self._reset = PARAM_RESET_ON
 
     def set_reset_off(self):
         """Sets the reset mode off.
            See set_reset_on help"""
-        self._reset = self.PARAM_RESET_OFF
+        self._reset = PARAM_RESET_OFF
 
     def flip(self):
         """Flip the page to change background by foreground"""
-        self._send(self.CMD_FLIP, 0)
+        self._send(CMD_FLIP, 0)
 
     def set_rgb(self, r=None, g=None, b=None):
         """Sets the rgb state"""
@@ -206,144 +194,144 @@ class Matrix(object):
     def fill(self, obj=None, page=None, reset=None):
         """Fill the object with the actual state (xyrgb)"""
         param = self._get_param(obj, page, reset)
-        self._send(self.CMD_FILL, param)
+        self._send(CMD_FILL, param)
 
     def fill_led(self):
         """Fill the object led on the actual page
            with the actual xyrgb state"""
-        self.fill(self.PARAM_OBJ_LED,
+        self.fill(PARAM_OBJ_LED,
                   self._page)
 
     def fill_led_bg(self):
         """Fill the object led on the background page
            with the actual xyrgb state"""
-        self.fill(self.PARAM_OBJ_LED,
-                  self.PARAM_PAGE_BG)
+        self.fill(PARAM_OBJ_LED,
+                  PARAM_PAGE_BG)
 
     def fill_led_fg(self):
         """Fill the object led on the foreground page
            with the actual xyrgb state"""
-        self.fill(self.PARAM_OBJ_LED,
-                  self.PARAM_PAGE_FG)
+        self.fill(PARAM_OBJ_LED,
+                  PARAM_PAGE_FG)
 
     def fill_col(self):
         """Fill the object col on the actual page
            with the actual xrgb state"""
-        self.fill(self.PARAM_OBJ_COL,
+        self.fill(PARAM_OBJ_COL,
                   self._page)
 
     def fill_col_bg(self):
         """Fill the object col on the background page
            with the actual xrgb state"""
-        self.fill(self.PARAM_OBJ_COL,
-                  self.PARAM_PAGE_BG)
+        self.fill(PARAM_OBJ_COL,
+                  PARAM_PAGE_BG)
 
     def fill_col_fg(self):
         """Fill the object col on the foreground page
            with the actual xrgb state"""
-        self.fill(self.PARAM_OBJ_COL,
-                  self.PARAM_PAGE_FG)
+        self.fill(PARAM_OBJ_COL,
+                  PARAM_PAGE_FG)
 
     def fill_row(self):
         """Fill the object row on the actual page
            with the actual yrgb state"""
-        self.fill(self.PARAM_OBJ_ROW,
+        self.fill(PARAM_OBJ_ROW,
                   self._page)
 
     def fill_row_bg(self):
         """Fill the object row on the background page
            with the actual yrgb state"""
-        self.fill(self.PARAM_OBJ_ROW,
-                  self.PARAM_PAGE_BG)
+        self.fill(PARAM_OBJ_ROW,
+                  PARAM_PAGE_BG)
 
     def fill_row_fg(self):
         """Fill the object row on the foreground page
            with the actual yrgb state"""
-        self.fill(self.PARAM_OBJ_ROW,
-                  self.PARAM_PAGE_FG)
+        self.fill(PARAM_OBJ_ROW,
+                  PARAM_PAGE_FG)
 
     def fill_all(self):
         """Fill the object all on the actual page
            with the actual rgb state"""
-        self.fill(self.PARAM_OBJ_ALL,
+        self.fill(PARAM_OBJ_ALL,
                   self._page)
 
     def fill_all_bg(self):
         """Fill the object all on the background page
            with the actual rgb state"""
-        self.fill(self.PARAM_OBJ_ALL,
-                  self.PARAM_PAGE_BG)
+        self.fill(PARAM_OBJ_ALL,
+                  PARAM_PAGE_BG)
 
     def fill_all_fg(self):
         """Fill the object all on the foreground page
            with the actual rgb state"""
-        self.fill(self.PARAM_OBJ_ALL,
-                  self.PARAM_PAGE_FG)
+        self.fill(PARAM_OBJ_ALL,
+                  PARAM_PAGE_FG)
 
     def clear(self, obj=None, page=None, reset=None):
         """Clear the object"""
         param = self._get_param(obj, page, reset)
-        self._send(self.CMD_CLEAR, param)
+        self._send(CMD_CLEAR, param)
 
     def clear_led(self):
         """Clear the object led on the actual page"""
-        self.clear(self.PARAM_OBJ_LED,
+        self.clear(PARAM_OBJ_LED,
                    self._page)
 
     def clear_led_bg(self):
         """Clear the object led on the background page"""
-        self.clear(self.PARAM_OBJ_LED,
-                   self.PARAM_PAGE_BG)
+        self.clear(PARAM_OBJ_LED,
+                   PARAM_PAGE_BG)
 
     def clear_led_fg(self):
         """Clear the object led on the foreground page"""
-        self.clear(self.PARAM_OBJ_LED,
-                   self.PARAM_PAGE_FG)
+        self.clear(PARAM_OBJ_LED,
+                   PARAM_PAGE_FG)
 
     def clear_col(self):
         """Clear the object col on the actual page"""
-        self.clear(self.PARAM_OBJ_COL,
+        self.clear(PARAM_OBJ_COL,
                    self._page)
 
     def clear_col_bg(self):
         """Clear the object col on the background page"""
-        self.clear(self.PARAM_OBJ_COL,
-                   self.PARAM_PAGE_BG)
+        self.clear(PARAM_OBJ_COL,
+                   PARAM_PAGE_BG)
 
     def clear_col_fg(self):
         """Clear the object col on the foreground page"""
-        self.clear(self.PARAM_OBJ_COL,
-                   self.PARAM_PAGE_FG)
+        self.clear(PARAM_OBJ_COL,
+                   PARAM_PAGE_FG)
 
     def clear_row(self):
         """Clear the object row on the actual page"""
-        self.clear(self.PARAM_OBJ_ROW,
+        self.clear(PARAM_OBJ_ROW,
                    self._page)
 
     def clear_row_bg(self):
         """Clear the object row on the background page"""
-        self.clear(self.PARAM_OBJ_ROW,
-                   self.PARAM_PAGE_BG)
+        self.clear(PARAM_OBJ_ROW,
+                   PARAM_PAGE_BG)
 
     def clear_row_fg(self):
         """Clear the object row on the foreground page"""
-        self.clear(self.PARAM_OBJ_ROW,
-                   self.PARAM_PAGE_FG)
+        self.clear(PARAM_OBJ_ROW,
+                   PARAM_PAGE_FG)
 
     def clear_all(self):
         """Clear the object all on the actual page"""
-        self.clear(self.PARAM_OBJ_ALL,
+        self.clear(PARAM_OBJ_ALL,
                    self._page)
 
     def clear_all_bg(self):
         """Clear the object all on the background page"""
-        self.clear(self.PARAM_OBJ_ALL,
-                   self.PARAM_PAGE_BG)
+        self.clear(PARAM_OBJ_ALL,
+                   PARAM_PAGE_BG)
 
     def clear_all_fg(self):
         """Clear the object all on the foreground page"""
-        self.clear(self.PARAM_OBJ_ALL,
-                   self.PARAM_PAGE_FG)
+        self.clear(PARAM_OBJ_ALL,
+                   PARAM_PAGE_FG)
 
     def rect(self, x=None, y=None, width=3, height=3):
         """Draw a rectangle"""
@@ -414,11 +402,11 @@ class Matrix(object):
 
     def set_debug_on(self):
         """Set on verbosity on arduino"""
-        self._send(self.CMD_DEBUG, self.PARAM_DEBUG_ON)
+        self._send(CMD_DEBUG, PARAM_DEBUG_ON)
 
     def set_debug_off(self):
         """Set off verbosity on arduino"""
-        self._send(self.CMD_DEBUG, self.PARAM_DEBUG_OFF)
+        self._send(CMD_DEBUG, PARAM_DEBUG_OFF)
 
     def _send(self, command, param):
         self.msg = chr((command << 4) + param)
@@ -430,334 +418,7 @@ class Matrix(object):
     def __str__(self):
         return "xy(%s, %s) rgb(%s, %s, %s) obj:%s page:%s reset:%s" % (
                 self.x, self.y, self.r, self.g, self.b, 
-                self.PARAM_OBJ_NAMES[self._obj],
-                self.PARAM_PAGE_NAMES[self._page],
-                self.PARAM_RESET_NAMES[self._reset])
-
-
-if __name__ == '__main__':
-
-    # Shell mode
-
-    import atexit
-    import os
-    import readline
-    import rlcompleter
-
-    historyPath = os.path.expanduser("~/.matrix-history")
-
-    #readline.parse_and_bind('tab: menu-complete')
-    readline.parse_and_bind('tab: complete')
-
-    def save_history(historyPath=historyPath):
-        import readline
-        readline.write_history_file(historyPath)
-
-    if os.path.exists(historyPath):
-        readline.read_history_file(historyPath)
-
-    atexit.register(save_history)
-    del os, atexit, readline, rlcompleter, save_history, historyPath
-
-
-    from functools import wraps
-
-    class Demo:
-
-        def __init__(self, matrix):
-            self.matrix = matrix
-
-        def _interruptible(f):
-            @wraps(f)
-            def wrapped(self, *args, **kwargs):
-                try:
-                    f(self, *args, **kwargs)
-                except KeyboardInterrupt:
-                    self.matrix.reset()
-                    print ""
-            return wrapped
-
-        def _rand_dots(self, sec, times):
-            for i in range(times):
-                self.matrix.set_rand_x()
-                self.matrix.set_rand_y()
-                self.matrix.set_rand_rgb()
-                self.matrix.fill_led()
-                time.sleep(sec)
-
-        def rand_dots(self, sec=.1, times=10):
-            """Draw dots on random position, random color"""
-            self.matrix.reset()
-            self._rand_dots(sec, times)
-
-        @_interruptible
-        def rand_dots_forever_fg(self, sec=.1, times=10):
-            """Draw forever dots on random position on foreground,
-               random color"""
-            self.matrix.reset()
-            while True:
-                self.matrix.clear_all()
-                self._rand_dots(sec, times)
-
-        @_interruptible
-        def rand_dots_forever_bg(self, sec=.1, times=10):
-            """Draw forever dots on random position on background,
-               random color"""
-            self.matrix.reset()
-            self.matrix.set_page_bg()
-            while True:
-                self.matrix.clear_all()
-                self._rand_dots(sec, times)
-                self.matrix.flip()
-
-        def _squares(self, sec):
-            self.matrix.x, self.matrix.y = 0, 0
-            for i in range(4):
-                self.matrix.set_rand_rgb()
-                self.matrix.square(x=i, y=i, size=8-i*2)
-                time.sleep(sec)
-
-        def squares(self, sec=.1):
-            """Draw concentric squares, random color"""
-            self.matrix.reset()
-            self._squares(sec)
-
-        @_interruptible
-        def squares_forever_fg(self, sec=.1):
-            """Draw forever concentric squares on foreground,
-               random color"""
-            self.matrix.reset()
-            while True:
-                self.matrix.clear_all()
-                self._squares(sec)
-
-        @_interruptible
-        def squares_forever_bg(self, sec=.1):
-            """Draw forever concentric squares on background,
-               random color"""
-            self.matrix.reset()
-            self.matrix.set_page_bg()
-            while True:
-                self.matrix.clear_all_bg()
-                self._squares(sec)
-                self.matrix.flip()
-
-        def _rows(self, sec):
-            self.matrix.x = 0
-            for i in range(8):
-                self.matrix.y = i
-                self.matrix.set_rand_rgb()
-                self.matrix.fill_row()
-                time.sleep(sec)
-
-        def rows(self, sec=.1):
-            """Draw all rows, random color"""
-            self.matrix.reset()
-            self._rows(sec)
-
-        @_interruptible
-        def rows_forever_fg(self, sec=.1):
-            """Draw forever all rows on foreground,
-               random color"""
-            self.matrix.reset()
-            while True:
-                self._rows(sec)
-
-        @_interruptible
-        def rows_forever_bg(self, sec=.1):
-            """Draw forever all rows on background,
-               random color"""
-            self.matrix.reset()
-            self.matrix.set_page_bg()
-            while True:
-                self._rows(sec)
-                self.matrix.flip()
-
-        def _cols(self, sec):
-            self.matrix.y = 0
-            for i in range(8):
-                self.matrix.x = i
-                self.matrix.set_rand_rgb()
-                self.matrix.fill_col()
-                time.sleep(sec)
-
-        def cols(self, sec=.1):
-            """Draw all cols, random color"""
-            self.matrix.reset()
-            self._cols(sec)
-
-        @_interruptible
-        def cols_forever_fg(self, sec=.1):
-            """Draw forever all cols on foreground"""
-            self.matrix.reset()
-            while True:
-                self.matrix.clear_all()
-                self._cols(sec)
-
-        @_interruptible
-        def cols_forever_bg(self, sec=.1):
-            """Draw forever all cols on background,
-               random color"""
-            self.matrix.reset()
-            self.matrix.set_page_bg()
-            while True:
-                self._cols(sec)
-                self.matrix.flip()
-
-        def _rand_lines(self, sec, times):
-            for i in range(times):
-                self.matrix.set_rand_x()
-                self.matrix.set_rand_y()
-                self.matrix.set_rand_rgb()
-                if random.randint(0, 1):
-                    self.matrix.fill_col()
-                else:
-                    self.matrix.fill_row()
-                time.sleep(sec)
-
-        def rand_lines(self, sec=.1, times=5):
-            """Draw rows and cols on random position,
-               random color"""
-            self.matrix.reset()
-            self._rand_lines(sec, times)
-
-        @_interruptible
-        def rand_lines_forever_fg(self, sec=.1, times=5):
-            """Draw forever rows and cols on random position,
-               on foreground, random color"""
-            self.matrix.reset()
-            while True:
-                self.matrix.clear_all()
-                self._rand_lines(sec, times)
-
-        @_interruptible
-        def rand_lines_forever_bg(self, sec=.1, times=5):
-            """Draw forever rows and cols on random position,
-               on background, random color"""
-            self.matrix.reset()
-            self.matrix.set_page_bg()
-            while True:
-                self.matrix.clear_all()
-                self._rand_lines(sec, times)
-                self.matrix.flip()
-
-        def _tunnel(self, sec):
-            self.matrix.set_page_bg()
-            self.matrix.set_rand_rgb()
-            for i in range(4):
-                self.matrix.clear_all_bg()
-                self.matrix.x = 3 - i
-                self.matrix.y = 3 - i
-                self.matrix.square(size=(i+1)*2)
-                self.matrix.flip()
-                time.sleep(sec)
-
-        def tunnel(self, sec=.1):
-            """Draw a tunnel, random color"""
-            self.matrix.reset()
-            self._tunnel(sec)
-
-        @_interruptible
-        def tunnel_forever(self, sec=.1):
-            """Draw a tunnel forever, random color"""
-            self.matrix.reset()
-            while True:
-                self._tunnel(sec)
-
-        def _chessboard(self, sec, page):
-            self.matrix._page = page
-            chessboards = [
-                [0, 2, 5, 7, 8, 10, 13, 15],
-                [1, 3, 4, 6, 9, 11, 12, 14],
-            ]
-            for i in (0, 1):
-                self.matrix.clear_all()
-                random.shuffle(chessboards[i])
-                for s in chessboards[i]:
-                    x = (s % 4) * 2
-                    y = (s / 4) * 2
-                    self.matrix.set_rand_rgb()
-                    self.matrix.square(x, y, 2)
-                    time.sleep(sec)
-                if page == self.matrix.PARAM_PAGE_BG:
-                    self.matrix.flip()
-                    time.sleep(sec * 8)
-
-        def chessboard(self, sec=.1, page=None):
-            """Draw a chessboard with random color cells"""
-            self.matrix.reset()
-            self._chessboard(sec, self.matrix.PARAM_PAGE_FG)
-
-        @_interruptible
-        def chessboard_forever_fg(self, sec=.1):
-            """Draw forever a chessboard on foreground
-               with random color cells"""
-            self.matrix.reset()
-            while True:
-                self._chessboard(sec, self.matrix.PARAM_PAGE_FG)
-
-        @_interruptible
-        def chessboard_forever_bg(self, sec=.1):
-            """Draw forever a chessboard on background
-               with random color cells"""
-            self.matrix.reset()
-            while True:
-                self._chessboard(sec, page=self.matrix.PARAM_PAGE_BG)
-
-        def _degree(self, sec, page):
-            self.matrix._page = page
-            self.matrix.set_obj_row()
-            self.matrix.x = 0
-            for i in range(1, 8):
-                for y, n in enumerate(range(1, 16, 2)):
-                    r = i & 1 and n or 0
-                    g = i & 2 and n or 0
-                    b = i & 4 and n or 0
-                    self.matrix.set(y=y, r=r, g=g, b=b)
-                    time.sleep(sec)
-                if page == self.matrix.PARAM_PAGE_BG:
-                    self.matrix.flip()
-
-        def degree(self, sec=.1):
-            """Draw lines of degree colors"""
-            self.matrix.reset()
-            self._degree(sec, page=self.matrix.PARAM_PAGE_FG)
-
-        @_interruptible
-        def degree_forever_fg(self, sec=.1):
-            """Draw forever lines of degree colors on foreground"""
-            self.matrix.reset()
-            while True:
-                self._degree(sec, page=self.matrix.PARAM_PAGE_FG)
-
-        @_interruptible
-        def degree_forever_bg(self, sec=.1):
-            """Draw forever lines of degree colors on background"""
-            self.matrix.reset()
-            while True:
-                self._degree(sec, page=self.matrix.PARAM_PAGE_BG)
-
-        @_interruptible
-        def start(self, sec=.1):
-            """Run all demos in random order"""
-            from itertools import cycle
-            times = 5
-            demos = [
-                (self.rand_dots, times),
-                (self.squares, times),
-                (self.rows, times),
-                (self.cols, times),
-                (self.rand_lines, times),
-                (self.tunnel, times),
-                (self.chessboard, times),
-                (self.degree, 1),
-            ]
-            random.shuffle(demos)
-            for f, times in cycle(demos):
-                print "%s(sec=%s) " % (f.__name__, sec)
-                for i in range(times):
-                    f(sec)
-
-    matrix = Matrix(conn)
-    demo = Demo(matrix)
+                PARAM_OBJ_NAMES[self._obj],
+                PARAM_PAGE_NAMES[self._page],
+                PARAM_RESET_NAMES[self._reset])
 
