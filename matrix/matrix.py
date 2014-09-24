@@ -45,8 +45,8 @@ PARAM_RESET_NAMES = {
 
 class Matrix(object):
 
-    def __init__(self, conn):
-        self.conn = conn
+    def __init__(self, serial):
+        self.serial = serial
         self._x = None
         self._y = None
         self._r = None
@@ -410,7 +410,7 @@ class Matrix(object):
 
     def _send(self, command, param):
         self.msg = chr((command << 4) + param)
-        self.conn.write(self.msg)
+        self.serial.write(self.msg)
 
     def __repr__(self):
         return self.__str__()

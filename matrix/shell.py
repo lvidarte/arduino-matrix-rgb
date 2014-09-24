@@ -1,23 +1,34 @@
 #!/usr/bin/python -i
 
 import sys
-import serial
 import atexit
 import os
 import readline
 import rlcompleter
 
-import matrix
-import demo
+from optparse import OptionParser
+
+from serial import Serial
+from matrix import Matrix
+from demo import Demo
+
+
+usage = "usage: %prog [options] port"
+parser = OptionParser(usage=usage)
+parser.add_option('-b', '--baudrate', type=int, default=9600,
+                  help="baud rate")
+options, args = parser.parse_args()
+
+if len(args) == 0:
+    parser.print_help()
+    sys.exit(1)
 
 try:
-    conn = serial.Serial('/dev/ttyACM0', 9600)
+    serial = Serial(args[0], options.baudrate)
 except OSError:
-    try:
-        conn = serial.Serial('/dev/ttyACM1', 9600)
-    except OSError:
-        print "Can't connect to serial device"
-        sys.exit(1)
+    print "Can't connect to serial device on", args.port
+    sys.exit(1)
+
 
 historyPath = os.path.expanduser("~/.matrix-history")
 
@@ -34,7 +45,18 @@ if os.path.exists(historyPath):
 atexit.register(save_history)
 del os, atexit, readline, rlcompleter, save_history, historyPath
 
+matrix = Matrix(serial)
+demo = Demo(matrix)
 
-matrix = matrix.Matrix(conn)
-demo = demo.Demo(matrix)
+print """
+Welcome to matrix shell
+Autocompletion and history are enabled
 
+Objects:
+    serial    (object)  serial = Serial()
+    matrix    (object)  matrix = Matrix(serial)
+    demo      (object)  demo = Demo(matrix)
+
+Try the demo:
+    >>> demo.start()
+"""
