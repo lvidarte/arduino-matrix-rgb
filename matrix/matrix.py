@@ -1,5 +1,7 @@
 import random
 
+ROWS = 8
+COLS = 8
 
 CMD_CLEAR = 0b0000
 CMD_FLIP  = 0b0001
@@ -169,13 +171,25 @@ class Matrix(object):
         self.g = random.randint(0, 15)
         self.b = random.randint(0, 15)
 
+    def set_xy(self, x, y):
+        """Sets the x and y position"""
+        self.x = x
+        self.y = y
+
     def set_rand_x(self):
         """Sets randomly the x position"""
-        self.x = random.randint(0, 7)
+        self.x = random.randint(0, COLS - 1)
+        return self.x
 
     def set_rand_y(self):
         """Sets randomly the y position"""
-        self.y = random.randint(0, 7)
+        self.y = random.randint(0, ROWS - 1)
+        return self.y
+
+    def set_rand_xy(self):
+        self.set_rand_x()
+        self.set_rand_y()
+        return (self.x, self.y)
 
     def set(self, x=None, y=None, r=None, g=None, b=None):
         """Sets the state (xyrgb) and fill the actual object"""
