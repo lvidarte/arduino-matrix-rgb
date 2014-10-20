@@ -170,6 +170,7 @@ class Matrix(object):
         self.r = random.randint(0, 15)
         self.g = random.randint(0, 15)
         self.b = random.randint(0, 15)
+        return (self.r, self.g, self.b)
 
     def set_xy(self, x, y):
         """Sets the x and y position"""
@@ -190,6 +191,11 @@ class Matrix(object):
         self.set_rand_x()
         self.set_rand_y()
         return (self.x, self.y)
+
+    def set_rand_all(self):
+        """Sets randomly the position and color"""
+        return (self.set_rand_xy(),
+                self.set_rand_rgb())
 
     def set(self, x=None, y=None, r=None, g=None, b=None):
         """Sets the state (xyrgb) and fill the actual object"""
