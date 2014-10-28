@@ -155,6 +155,10 @@ class Matrix(object):
         """Flip the page to change background by foreground"""
         self._send(CMD_FLIP, 0)
 
+    def set_color(self, r=None, g=None, b=None):
+        """Sets the rgb state"""
+        self.set_rgb(r, g, b)
+
     def set_rgb(self, r=None, g=None, b=None):
         """Sets the rgb state"""
         self.r = r
@@ -165,12 +169,20 @@ class Matrix(object):
         """Sets the rgb state, 0 by default"""
         self.set_rgb(r, g, b)
 
+    def set_rand_color(self):
+        """Sets randomly the rgb state"""
+        return self.set_rand_rgb()
+
     def set_rand_rgb(self):
         """Sets randomly the rgb state"""
         self.r = random.randint(0, 15)
         self.g = random.randint(0, 15)
         self.b = random.randint(0, 15)
         return (self.r, self.g, self.b)
+
+    def set_pos(self, x, y):
+        """Sets the x and y position"""
+        self.set_xy(x, y)
 
     def set_xy(self, x, y):
         """Sets the x and y position"""
@@ -187,7 +199,12 @@ class Matrix(object):
         self.y = random.randint(0, ROWS - 1)
         return self.y
 
+    def set_rand_pos(self):
+        """Sets randomly the x and y position"""
+        return self.set_rand_xy()
+
     def set_rand_xy(self):
+        """Sets randomly the x and y position"""
         self.set_rand_x()
         self.set_rand_y()
         return (self.x, self.y)
