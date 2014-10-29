@@ -446,8 +446,8 @@ class Matrix(object):
         self._send(CMD_DEBUG, PARAM_DEBUG_OFF)
 
     def _send(self, command, param):
-        self.msg = chr((command << 4) + param)
-        self.serial.write(self.msg)
+        msg = chr((command << 4) + param)
+        self.serial.write(msg)
 
     def __repr__(self):
         return self.__str__()
