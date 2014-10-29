@@ -1,6 +1,7 @@
 import time
 import random
 from functools import wraps
+from matrix import PARAM_PAGE_FG, PARAM_PAGE_BG
 
 
 class Demo:
@@ -220,14 +221,14 @@ class Demo:
                 self.matrix.set_rand_rgb()
                 self.matrix.square(x, y, 2)
                 time.sleep(sec)
-            if page == self.matrix.PARAM_PAGE_BG:
+            if page == PARAM_PAGE_BG:
                 self.matrix.flip()
                 time.sleep(sec * 8)
 
     def chessboard(self, sec=.1, page=None):
         """Draw a chessboard with random color cells"""
         self.matrix.reset()
-        self._chessboard(sec, self.matrix.PARAM_PAGE_FG)
+        self._chessboard(sec, PARAM_PAGE_FG)
 
     @_interruptible
     def chessboard_forever_fg(self, sec=.1):
@@ -235,7 +236,7 @@ class Demo:
            with random color cells"""
         self.matrix.reset()
         while True:
-            self._chessboard(sec, self.matrix.PARAM_PAGE_FG)
+            self._chessboard(sec, PARAM_PAGE_FG)
 
     @_interruptible
     def chessboard_forever_bg(self, sec=.1):
@@ -243,7 +244,7 @@ class Demo:
            with random color cells"""
         self.matrix.reset()
         while True:
-            self._chessboard(sec, page=self.matrix.PARAM_PAGE_BG)
+            self._chessboard(sec, page=PARAM_PAGE_BG)
 
     def _degree(self, sec, page):
         self.matrix._page = page
@@ -256,27 +257,27 @@ class Demo:
                 b = i & 4 and n or 0
                 self.matrix.set(y=y, r=r, g=g, b=b)
                 time.sleep(sec)
-            if page == self.matrix.PARAM_PAGE_BG:
+            if page == PARAM_PAGE_BG:
                 self.matrix.flip()
 
     def degree(self, sec=.1):
         """Draw lines of degree colors"""
         self.matrix.reset()
-        self._degree(sec, page=self.matrix.PARAM_PAGE_FG)
+        self._degree(sec, page=PARAM_PAGE_FG)
 
     @_interruptible
     def degree_forever_fg(self, sec=.1):
         """Draw forever lines of degree colors on foreground"""
         self.matrix.reset()
         while True:
-            self._degree(sec, page=self.matrix.PARAM_PAGE_FG)
+            self._degree(sec, page=PARAM_PAGE_FG)
 
     @_interruptible
     def degree_forever_bg(self, sec=.1):
         """Draw forever lines of degree colors on background"""
         self.matrix.reset()
         while True:
-            self._degree(sec, page=self.matrix.PARAM_PAGE_BG)
+            self._degree(sec, page=PARAM_PAGE_BG)
 
     @_interruptible
     def start(self, sec=.1):
