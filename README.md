@@ -119,3 +119,63 @@ Reset the matrix to default values and draw a square
 ((1, 0), (5, 2, 8))
 ((7, 0), (13, 4, 13))
 ```
+
+### Autocomplete and help
+
+Just type matrix.[TAB][TAB] to see all methods
+
+```python
+>>> matrix.
+matrix.b                  matrix.rect(
+matrix.clear(             matrix.reset(
+matrix.clear_all(         matrix.serial
+matrix.clear_all_bg(      matrix.set(
+matrix.clear_all_fg(      matrix.set0(
+matrix.clear_col(         matrix.set_color(
+matrix.clear_col_bg(      matrix.set_debug_off(
+matrix.clear_col_fg(      matrix.set_debug_on(
+matrix.clear_led(         matrix.set_obj_all(
+matrix.clear_led_bg(      matrix.set_obj_col(
+matrix.clear_led_fg(      matrix.set_obj_led(
+matrix.clear_row(         matrix.set_obj_row(
+matrix.clear_row_bg(      matrix.set_page_bg(
+matrix.clear_row_fg(      matrix.set_page_fg(
+matrix.fill(              matrix.set_pos(
+matrix.fill_all(          matrix.set_rand_all(
+matrix.fill_all_bg(       matrix.set_rand_color(
+matrix.fill_all_fg(       matrix.set_rand_pos(
+matrix.fill_col(          matrix.set_rand_rgb(
+matrix.fill_col_bg(       matrix.set_rand_x(
+matrix.fill_col_fg(       matrix.set_rand_xy(
+matrix.fill_led(          matrix.set_rand_y(
+matrix.fill_led_bg(       matrix.set_reset_off(
+matrix.fill_led_fg(       matrix.set_reset_on(
+matrix.fill_row(          matrix.set_rgb(
+matrix.fill_row_bg(       matrix.set_rgb0(
+matrix.fill_row_fg(       matrix.set_xy(
+matrix.flip(              matrix.square(
+matrix.g                  matrix.x
+matrix.line_horizontal(   matrix.y
+matrix.line_vertical(
+matrix.r
+```
+
+Then use the help function
+
+```python
+>>> help(matrix.set0)
+
+Help on method set0 in module matrix.matrix:
+
+set0(self, x=0, y=0, r=0, g=0, b=0) method of matrix.matrix.Matrix instance
+    Sets the state (xyrgb) and fill the actual object,
+    0 by default
+```
+
+### Debug
+
+Open a serial monitor for Arduino and set the debug on to enable verbosity
+
+```python
+>>> matrix.set_debug_on()
+```
