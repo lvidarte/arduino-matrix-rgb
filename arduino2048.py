@@ -23,19 +23,30 @@ class Getch:
 
 class Arduino2048:
 
-    def __init__(self, size=4):
-        self.size = 4
-        self.start()
+    COLORS = {
+        2  : (15, 0, 0),
+        4  : (15, 15, 0),
+        8  : (15, 15, 15),
+        16 : (15, 0, 15),
+        32 : (0, 0, 15),
+        64 : (0, 15, 15),
+        128 : (0, 15, 0),
+    }
 
-    def start(self):
+    def __init__(self, matrix=None, size=4):
+        self.matrix = matrix
+        self.size = 4
+
+    def play(self):
         self.reset()
         self.add()
         self.add()
         commands = {'h': 'left', 'j': 'bottom', 'k': 'top', 'l': 'right'}
         getch = Getch()
+        if self.matrix:
+            self.matrix.reset()
+        self.draw()
         while True:
-            print '-' * 10
-            print self
             c = getch()
             self.move(commands[c])
 
@@ -53,12 +64,10 @@ class Arduino2048:
         board = moves[direction]()
         if board != self.board:
             self.board = board
-            print '-' * 10
-            print self
+            self.draw()
             time.sleep(.25)
             self.add()
-            print '-' * 10
-            print self
+            self.draw()
 
     def move_left(self):
         board = []
@@ -118,13 +127,34 @@ class Arduino2048:
 
     def add(self):
         empty = []
-        for x, row in enumerate(self.board):
-            for y, val in enumerate(row):
+        for y, row in enumerate(self.board):
+            for x, val in enumerate(row):
                 if val == 0:
                     empty.append((x, y))
         if len(empty):
             x, y = random.choice(empty)
-            self.board[x][y] = 2
+            self.board[y][x] = 2
+
+    def draw(self):
+        print "\n", self
+        if self.matrix is not None:
+            self.draw_matrix()
+
+    def draw_matrix(self):
+        self.matrix.set_page_bg()
+        self.matrix.clear_all_bg()
+        for y, row in enumerate(self.board):
+            for x, val in enumerate(row):
+                if val:
+                    pos = (x * 2, 6 - y * 2)
+                    self.draw_cell(pos, val)
+        self.matrix.flip()
+
+    def draw_cell(self, pos, val):
+        x, y = pos
+        r, g, b = self.COLORS[val]
+        self.matrix.set_color(r, g, b)
+        self.matrix.rect(x, y, 2, 2)
 
     def __str__(self):
         return "\n".join(["".join(["% 5s" % v for v in row]) 
@@ -136,4 +166,5 @@ class Arduino2048:
 if __name__ == '__main__':
 
     game = Arduino2048()
+    game.play()
 
