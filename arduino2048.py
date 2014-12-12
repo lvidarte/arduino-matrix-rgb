@@ -4,23 +4,6 @@ import random
 import time
 
 
-class Getch:
-
-    def __init__(self):
-        import tty, sys
-
-    def __call__(self):
-        import sys, tty, termios
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
-
-
 class Arduino2048:
 
     COLORS = {
@@ -106,14 +89,14 @@ class Arduino2048:
         return [list(e) for e in zip(*board)[::-1]]
 
     def row_to_left(self, row):
-        for i in range(3):
-            for _ in range(3 - i):
+        for i in range(self.size - 1):
+            for _ in range(self.size - 1 - i):
                 if row[i] == 0:
                     row.pop(i)
                     row.append(0)
                 else:
                     break
-            for _ in range(2 - i):
+            for _ in range(self.size - 2 - i):
                 if row[i + 1] == 0:
                     row.pop(i + 1)
                     row.append(0)
@@ -162,6 +145,24 @@ class Arduino2048:
 
     def __repr__(self):
         return self.__str__()
+
+
+class Getch:
+
+    def __init__(self):
+        import tty, sys
+
+    def __call__(self):
+        import sys, tty, termios
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
 
 if __name__ == '__main__':
 
