@@ -1,5 +1,6 @@
 #!/bin/python
 
+import sys
 import random
 import time
 
@@ -7,14 +8,31 @@ import time
 class Arduino2048:
 
     COLORS = {
-        2  : (15, 0, 0),
-        4  : (15, 15, 0),
-        8  : (15, 15, 15),
-        16 : (15, 0, 15),
-        32 : (0, 0, 15),
-        64 : (0, 15, 15),
-        128 : (0, 15, 0),
+           2 : ( 5,  5,  0),
+           4 : ( 5,  1,  0),
+           8 : ( 5,  0,  0),
+          16 : ( 5,  0,  5),
+          32 : ( 0,  5,  1),
+          64 : ( 0,  5,  5),
+         128 : ( 0,  1,  5),
+         256 : ( 0,  0,  5),
+         512 : ( 1,  5,  0),
+        1024 : ( 0,  5,  0),
+        2028 : ( 5,  5,  5),
     }
+
+    KEYS = {
+        'h': 'left',
+        'j': 'bottom',
+        'k': 'top',
+        'l': 'right',
+        'a': 'left',
+        'z': 'bottom',
+        'w': 'top',
+        's': 'right',
+    }
+
+    SLEEP_BEFORE_ADD = .1
 
     def __init__(self, matrix=None, size=4):
         self.matrix = matrix
@@ -24,14 +42,16 @@ class Arduino2048:
         self.reset()
         self.add()
         self.add()
-        commands = {'h': 'left', 'j': 'bottom', 'k': 'top', 'l': 'right'}
         getch = Getch()
         if self.matrix:
             self.matrix.reset()
         self.draw()
         while True:
             c = getch()
-            self.move(commands[c])
+            if c in self.KEYS.keys():
+                self.move(self.KEYS[c])
+            elif c == 'q':
+                sys.exit(0)
 
     def reset(self):
         self.board = [[0 for i in range(self.size)]
@@ -48,8 +68,8 @@ class Arduino2048:
         if board != self.board:
             self.board = board
             self.draw()
-            time.sleep(.25)
             self.add()
+            time.sleep(self.SLEEP_BEFORE_ADD)
             self.draw()
 
     def move_left(self):
