@@ -1,5 +1,6 @@
 #!/bin/python
 
+import sys
 import random
 import time
 
@@ -13,7 +14,7 @@ class Awesome11:
         'l': 'right'
     }
 
-    SLEEP_BEFORE_ADD = .25
+    SLEEP_BEFORE_ADD = .1
 
     def __init__(self, size=4):
         self.size = size
@@ -25,7 +26,10 @@ class Awesome11:
         getch = Getch()
         while True:
             c = getch()
-            self.move(self.KEYS[c])
+            if c in self.KEYS.keys():
+                self.move(self.KEYS[c])
+            elif c == 'q':
+                sys.exit(0)
 
     def reset(self):
         self.board = [[0 for i in range(self.size)]
