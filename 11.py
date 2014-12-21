@@ -3,6 +3,7 @@
 import sys
 import random
 import time
+import curses
 
 
 class Awesome11:
@@ -14,35 +15,58 @@ class Awesome11:
         'l': 'right'
     }
 
-    SLEEP_BEFORE_ADD = .1
+    COLORS = {
+         1: (curses.COLOR_YELLOW,  curses.COLOR_BLACK),
+         2: (curses.COLOR_MAGENTA, curses.COLOR_BLACK),
+         3: (curses.COLOR_RED,     curses.COLOR_BLACK),
+         4: (curses.COLOR_GREEN,   curses.COLOR_BLACK),
+         5: (curses.COLOR_BLUE,    curses.COLOR_BLACK),
+         6: (curses.COLOR_CYAN,    curses.COLOR_BLACK),
+         7: (curses.COLOR_BLACK,   curses.COLOR_YELLOW),
+         8: (curses.COLOR_WHITE,   curses.COLOR_MAGENTA),
+         9: (curses.COLOR_WHITE,   curses.COLOR_RED),
+        10: (curses.COLOR_WHITE,   curses.COLOR_GREEN),
+        11: (curses.COLOR_WHITE,   curses.COLOR_BLUE),
+        12: (curses.COLOR_WHITE,   curses.COLOR_CYAN),
+    }
+
+    SLEEP_BEFORE_ADD = .2
 
     def __init__(self, size=4):
         self.size = size
+        self.init_screen()
 
-    def play(self):
-        self.reset()
-        self.add()
-        self.add()
-        getch = Getch()
-        while True:
-            c = getch()
-            if c in self.KEYS.keys():
-                self.move(self.KEYS[c])
-            elif c == 'q':
-                sys.exit(0)
+    def init_screen(self):
+        self.screen = curses.initscr()
+        curses.start_color()
+        curses.noecho()
+        curses.curs_set(0)
+        self.screen.keypad(1)
+        for val, colors in self.COLORS.items():
+            fg, bg = colors
+            curses.init_pair(val, fg, bg)
 
-    def reset(self):
+    def init_board(self):
         self.board = [[0 for i in range(self.size)]
                          for j in range(self.size)]
 
+    def play(self):
+        self.init_board()
+        self.add()
+        self.add()
+        while True:
+            key = self.screen.getkey()
+            if key in self.KEYS.keys():
+                self.move(self.KEYS[key])
+            elif key == 'q':
+                self.quit()
+
+    def quit(self):
+        curses.endwin()
+        sys.exit(0)
+
     def move(self, direction):
-        moves = {
-            'left'  : self.move_left,
-            'right' : self.move_right,
-            'top'   : self.move_top,
-            'bottom': self.move_bottom,
-        }
-        board = moves[direction]()
+        board = getattr(self, 'move_%s' % direction)()
         if board != self.board:
             self.board = board
             self.draw()
@@ -117,7 +141,20 @@ class Awesome11:
         self.draw()
 
     def draw(self):
-        print "\n", self
+        self.screen.clear()
+        for row in self.board:
+            for val in row:
+                self.draw_val(val)
+            self.screen.addstr("\n")
+        self.screen.refresh()
+
+    def draw_val(self, val):
+        if val < 10:
+            sep = '  '
+        else:
+            sep = ' '
+        self.screen.addstr(sep)
+        self.screen.addstr(str(val or '_'), curses.color_pair(val))
 
     def __str__(self):
         return "\n".join(["".join(["% 3s" % v for v in row]) 
@@ -125,23 +162,6 @@ class Awesome11:
 
     def __repr__(self):
         return self.__str__()
-
-
-class Getch:
-
-    def __init__(self):
-        import tty, sys
-
-    def __call__(self):
-        import sys, tty, termios
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
 
 
 if __name__ == '__main__':
