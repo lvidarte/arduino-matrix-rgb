@@ -142,6 +142,7 @@ class Awesome11:
 
     def draw(self):
         self.screen.clear()
+        self.screen.addstr("\n")
         for row in self.board:
             for val in row:
                 self.draw_val(val)
